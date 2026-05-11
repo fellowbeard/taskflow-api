@@ -1,5 +1,6 @@
 class TasksController < ApplicationController
-  before_action :set_task, only: [:show, :assign, :transition]
+  before_action :set_task, only: [:show, :assign, :transition, :destroy]
+  before_action :require_login
 
   def index
     tasks = Task.order(:id)
@@ -20,14 +21,15 @@ class TasksController < ApplicationController
   end
 
   def create
-    task = Task.create!(task_params)
+    task = Task.create!(
+      task_params.merge(created_by_id: current_user.id)
+    )
+
     render json: task_json(task), status: :created
   end
 
   def assign
-    user = User.find(params[:user_id])
-    @task.assign_to!(user)
-
+    @task.assign_to!(current_user)
     render json: task_json(@task)
   end
 
@@ -37,6 +39,11 @@ class TasksController < ApplicationController
     render json: task_json(@task)
   rescue StandardError => e
     render json: { error: e.message }, status: :unprocessable_entity
+  end
+
+  def destroy
+    @task.destroy!
+    head :no_content
   end
 
   private
@@ -50,6 +57,7 @@ class TasksController < ApplicationController
       priority: task.priority,
       assigned_to_id: task.assigned_to_id,
       assigned_to_name: task.assigned_to&.name,
+      created_by_name: task.created_by&.name, # 👈 ADD THIS
       task_events: task.task_events.map do |event|
         {
           id: event.id,

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[7.0].define(version: 2026_05_04_235031) do
+ActiveRecord::Schema[7.0].define(version: 2026_05_11_190400) do
   # These are extensions that must be enabled in order to support this database
   enable_extension "plpgsql"
 
@@ -34,6 +34,8 @@ ActiveRecord::Schema[7.0].define(version: 2026_05_04_235031) do
     t.date "due_date"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.bigint "created_by_id"
+    t.index ["created_by_id"], name: "index_tasks_on_created_by_id"
   end
 
   create_table "users", force: :cascade do |t|
@@ -41,7 +43,9 @@ ActiveRecord::Schema[7.0].define(version: 2026_05_04_235031) do
     t.string "email"
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
+    t.string "password_digest"
   end
 
   add_foreign_key "task_events", "tasks"
+  add_foreign_key "tasks", "users", column: "created_by_id"
 end
